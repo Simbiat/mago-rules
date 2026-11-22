@@ -1,0 +1,12 @@
+<?php
+
+declare(strict_types=1);
+
+// === Calls with a trailing comma: the fixed code must stay valid PHP ===
+mb_strlen($str,encoding: 'UTF-8'); // @expect simbiat/multibyte-encoding
+mb_strlen($str, encoding: 'UTF-8'); // @expect simbiat/multibyte-encoding
+mb_substr( // @expect simbiat/multibyte-encoding
+    $str,
+    0,
+    5,
+encoding: 'UTF-8');

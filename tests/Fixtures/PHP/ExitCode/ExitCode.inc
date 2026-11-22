@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+// === Bare exit/die, no parentheses ===
+exit; // @expect simbiat/exit-code
+die; // @expect simbiat/exit-code
+EXIT; // @expect simbiat/exit-code
+
+if ($something === true) {
+    exit; // @expect simbiat/exit-code
+}
+
+// === Empty parentheses ===
+exit(); // @expect simbiat/exit-code
+die(); // @expect simbiat/exit-code
+exit( ); // @expect simbiat/exit-code
+
+// === Exit code present: must NOT be flagged ===
+exit(1);
+die(0);
+exit('Something went wrong');
+exit($code);
+exit(\EXIT_FAILURE);
+
+// === Anything inside the parentheses counts as an argument, even a comment ===
+exit(/* intentionally empty */);
+
+// === Not exit/die at all ===
+$object->exit();
+$value = 'exit';

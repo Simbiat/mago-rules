@@ -1,0 +1,20 @@
+# An example of what to add to the mago.toml of the project that uses these rules.
+
+[extension-hosts.simbiat]
+# Mago starts this command, and talks to it. The path depends on where the package is:
+#  - installed with Composer:  vendor/simbiat/mago-rules/bin/worker.php
+#  - a folder of the project:  packages/MagoRules/bin/worker.php
+# The PHP must be the one, that has the dependencies of the project. If you run your tools in a Docker container,
+# this is the place to say so, for example: command = ["docker", "compose", "exec", "-T", "php", "php", "packages/MagoRules/bin/worker.php"]
+# command = ["php", "vendor/simbiat/mago-rules/bin/worker.php", "--sql-precision=0"]
+command = ["php", "/app/packages/MagoRules/bin/worker.php", "--sql-precision=0"]
+
+# Optional. The defaults are one adaptive pool, and a timeout, that is enough for normal files. See the Mago documentation for the rest.
+# workers = 2
+
+# Rules of the extension are configured as the native ones: by their codes.
+[linter.rules]
+"simbiat/exit-code" = { level = "warning" }
+"simbiat/sql-missing-precision" = { enabled = true }
+"simbiat/prefer-multibyte" = { enabled = true }
+"simbiat/twig-safe-filter-option" = { exclude = ["src/Twig/"] }

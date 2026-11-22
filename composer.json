@@ -1,0 +1,47 @@
+{
+    "name": "simbiat/mago-rules",
+    "type": "library",
+    "keywords": [
+        "php",
+        "sat",
+        "mago",
+        "linter",
+        "rules"
+    ],
+    "description": "Custom linter rules for Mago",
+    "homepage": "https://github.com/Simbiat/mago-rules",
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Dmitrii Kustov",
+            "email": "support@simbiat.eu",
+            "homepage": "https://www.simbiat.eu",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "ext-mbstring": "*",
+        "carthage-software/mago": "^1.61"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "\\Simbiat\\MagoRules\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Simbiat\\MagoRules\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "support": {
+        "issues": "https://github.com/Simbiat/mago-rules/issues",
+        "source": "https://github.com/Simbiat/mago-rules"
+    }
+}
