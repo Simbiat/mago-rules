@@ -13,6 +13,7 @@ declare(strict_types=1);
  *  - `mago_rules.prepend`      Another file to load first (the value of `MAGO_WORKER_PREPEND`).
  *  - `mago_rules.mutation`     Hexadecimal JSON of `[interceptor class, interceptor file, original file, mutated file]`: the worker loads the mutated file instead of the original,
  *                              as the process of PHPUnit does. Without it, a mutation of a rule would never run, because the rules run in the worker.
+ *                              The warnings and the deprecations of the mutated code are muted: they only fill the log of PHP.
  *
  * At the end of the process, the data is written as `<pid>-<random>.cov`. `WorkerCoverage::collect()` merges it into the PHPUnit coverage.
  * Nothing may be written to the standard output: Mago uses it for its protocol.
@@ -34,6 +35,10 @@ use SebastianBergmann\CodeCoverage\Filter;
         require_once $interceptor;
         $class::intercept($original, $mutant);
         $class::enable();
+
+        // A mutated rule often reads a missing key or a null. Infection counts such a mutant as killed because the result is different, so the warnings
+        // are no information, only noise in the log of PHP. Errors and exceptions stay on: they are what makes Mago report a failure.
+        \error_reporting(\E_ALL & ~(\E_WARNING | \E_NOTICE | \E_DEPRECATED | \E_USER_WARNING | \E_USER_NOTICE | \E_USER_DEPRECATED));
     }
 
     $directory = \get_cfg_var('mago_rules.coverage_dir');
