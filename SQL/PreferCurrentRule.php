@@ -48,33 +48,31 @@ final class PreferCurrentRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $precision = SqlDateTimeHelper::normalisePrecision($this->precision);
-
-        foreach (SqlDateTimeHelper::findBodies($context) as ['body' => $body, 'code' => $code, 'offset' => $offset, 'span' => $span]) {
-            if (!SqlDateTimeHelper::looksLikeSql($body)) {
-                continue;
-            }
-
-            $masked = SqlDateTimeHelper::mask($code);
-            $utc = SqlDateTimeHelper::findUtc($masked);
-            if ($utc === null) {
-                continue;
-            }
-
-            $edits = SqlDateTimeHelper::mergeUtcWithPrecision(
-                SqlDateTimeHelper::collectUtcEdits($masked),
-                SqlDateTimeHelper::collectPrecisionEdits($masked, $precision),
-            );
-
-            $issue = Issue::new(
-                \sprintf('Use CURRENT_%s instead of %s%s.', $utc['suffix'], $utc['prefix'], $utc['suffix']),
-                $span,
-            );
-            foreach ($edits as $edit) {
-                $issue = $issue->withEdit(TextEdit::replace(new Span($offset + $edit['offset'], $offset + $edit['offset'] + $edit['length']), $edit['replacement']));
-            }
-
-            $context->report($issue);
+        $found = SqlDateTimeHelper::findBody($context);
+        if ($found === null || !SqlDateTimeHelper::looksLikeSql($found['body'])) {
+            return;
         }
+
+        $masked = SqlDateTimeHelper::mask($found['code']);
+        $utc = SqlDateTimeHelper::findUtc($masked);
+        if ($utc === null) {
+            return;
+        }
+
+        $precision = SqlDateTimeHelper::normalisePrecision($this->precision);
+        $issue = Issue::new(
+            \sprintf('Use CURRENT_%s instead of %s%s.', $utc['suffix'], $utc['prefix'], $utc['suffix']),
+            $found['span'],
+        );
+        $edits = SqlDateTimeHelper::mergeUtcWithPrecision(
+            SqlDateTimeHelper::collectUtcEdits($masked),
+            SqlDateTimeHelper::collectPrecisionEdits($masked, $precision),
+        );
+        foreach ($edits as $edit) {
+            $start = $found['offset'] + $edit['offset'];
+            $issue = $issue->withEdit(TextEdit::replace(new Span($start, $start + $edit['length']), $edit['replacement']));
+        }
+
+        $context->report($issue);
     }
 }

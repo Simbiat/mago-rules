@@ -46,35 +46,34 @@ final class MissingPrecisionRule implements Rule
 
     public function lint(LintContext $context): void
     {
-        $precision = SqlDateTimeHelper::normalisePrecision($this->precision);
-
-        foreach (SqlDateTimeHelper::findBodies($context) as ['body' => $body, 'code' => $code, 'offset' => $offset, 'span' => $span]) {
-            if (!SqlDateTimeHelper::looksLikeSql($body)) {
-                continue;
-            }
-
-            $masked = SqlDateTimeHelper::mask($code);
-            $function = SqlDateTimeHelper::findMissingPrecision($masked, $precision);
-            if ($function === null) {
-                continue;
-            }
-
-            $issue = Issue::new(
-                \sprintf('%s should explicitly state (%d) fractional-second precision.', $function, $precision),
-                $span,
-            );
-            // A `UTC_*` function is changed by PreferCurrentRule, together with its precision. Mago does not apply two edits of the same place:
-            // the second one is skipped with a warning. So this rule leaves the `UTC_*` places to the other one.
-            $utc_offsets = \array_column(SqlDateTimeHelper::collectUtcEdits($masked), 'offset');
-            foreach (SqlDateTimeHelper::collectPrecisionEdits($masked, $precision) as $edit) {
-                if (\in_array($edit['offset'], $utc_offsets, strict: true)) {
-                    continue;
-                }
-
-                $issue = $issue->withEdit(TextEdit::replace(new Span($offset + $edit['offset'], $offset + $edit['offset'] + $edit['length']), $edit['replacement']));
-            }
-
-            $context->report($issue);
+        $found = SqlDateTimeHelper::findBody($context);
+        if ($found === null || !SqlDateTimeHelper::looksLikeSql($found['body'])) {
+            return;
         }
+
+        $precision = SqlDateTimeHelper::normalisePrecision($this->precision);
+        $masked = SqlDateTimeHelper::mask($found['code']);
+        $function = SqlDateTimeHelper::findMissingPrecision($masked, $precision);
+        if ($function === null) {
+            return;
+        }
+
+        $issue = Issue::new(
+            \sprintf('%s should explicitly state (%d) fractional-second precision.', $function, $precision),
+            $found['span'],
+        );
+        // A `UTC_*` function is changed by PreferCurrentRule, together with its precision. Mago does not apply two edits of the same place:
+        // the second one is skipped with a warning. So this rule leaves the `UTC_*` places to the other one.
+        $utc_offsets = \array_column(SqlDateTimeHelper::collectUtcEdits($masked), 'offset');
+        foreach (SqlDateTimeHelper::collectPrecisionEdits($masked, $precision) as $edit) {
+            if (\in_array($edit['offset'], $utc_offsets, strict: true)) {
+                continue;
+            }
+
+            $start = $found['offset'] + $edit['offset'];
+            $issue = $issue->withEdit(TextEdit::replace(new Span($start, $start + $edit['length']), $edit['replacement']));
+        }
+
+        $context->report($issue);
     }
 }

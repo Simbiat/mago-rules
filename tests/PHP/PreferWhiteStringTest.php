@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace Simbiat\MagoRules\Tests\PHP;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
-use Simbiat\MagoRules\Helpers\CallHelper;
-use Simbiat\MagoRules\Helpers\PregCallHelper;
-use Simbiat\MagoRules\PHP\PreferWhiteStringRule;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use Simbiat\MagoRules\Tests\RuleTestCase;
 use Simbiat\MagoRules\Tests\Support\MagoRunner;
 
-#[CoversClass(PreferWhiteStringRule::class)]
-#[UsesClass(CallHelper::class)]
-#[UsesClass(PregCallHelper::class)]
+#[CoversNothing]
 final class PreferWhiteStringTest extends RuleTestCase
 {
     public static function ruleCodes(): array

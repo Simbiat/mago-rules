@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Simbiat\MagoRules\Tests\Strings;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
-use Simbiat\MagoRules\Helpers\CallHelper;
-use Simbiat\MagoRules\Strings\PreferMultibyteRule;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use Simbiat\MagoRules\Tests\RuleTestCase;
 use Simbiat\MagoRules\Tests\Support\MagoRunner;
 
-#[CoversClass(PreferMultibyteRule::class)]
-#[UsesClass(CallHelper::class)]
+#[CoversNothing]
 final class PreferMultibyteTest extends RuleTestCase
 {
     public static function ruleCodes(): array

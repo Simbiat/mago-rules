@@ -63,13 +63,10 @@ final class PreferWhiteStringRule implements Rule
     public function lint(LintContext $context): void
     {
         $file = $context->file;
-        // A binary expression has three children: the left operand, the operator and the right operand.
+        // A binary expression always has three children: the left operand, the operator and the right operand.
         $parts = $context->getChildren();
-        if (\count($parts) !== 3 || $parts[1]->kind !== NodeKind::BinaryOperator) {
-            return;
-        }
 
-        // Comparison operator right after the call: === 1 or !== 1.
+        // Comparison operator right after the call: === 1 or !== 1. Anything else is skipped.
         $operator = $file->getText($parts[1]);
         if ($operator !== '===' && $operator !== '!==') {
             return;
@@ -151,11 +148,9 @@ final class PreferWhiteStringRule implements Rule
     private static function unwrapToFunctionCall(LintContext $context, Node $operand): ?Node
     {
         $node = $operand;
+        // An `Expression` and a `Call` always wrap one node, which is their first child.
         while ($node->kind === NodeKind::Expression || $node->kind === NodeKind::Call) {
-            $node = $context->file->getChildren($node)[0] ?? null;
-            if ($node === null) {
-                return null;
-            }
+            $node = $context->file->getChildren($node)[0];
         }
 
         return $node->kind === NodeKind::FunctionCall ? $node : null;

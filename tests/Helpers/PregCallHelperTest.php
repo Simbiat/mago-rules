@@ -4,25 +4,17 @@ declare(strict_types=1);
 
 namespace Simbiat\MagoRules\Tests\Helpers;
 
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use Simbiat\MagoRules\Helpers\CallHelper;
 use Simbiat\MagoRules\Helpers\PregCallHelper;
-use Simbiat\MagoRules\Helpers\RegexLiteralHelper;
-use Simbiat\MagoRules\Regex\MissingUnicodeFlagRule;
 use Simbiat\MagoRules\Tests\Support\MagoRunner;
 
 /**
  * The helper needs a syntax tree from Mago, so its behavior is checked through a rule that uses it (`simbiat/missing-unicode-flag`).
  * The rule reports a pattern without the `u` flag, so "is reported" means "the helper found a literal pattern".
  */
-#[CoversClass(PregCallHelper::class)]
-#[UsesClass(CallHelper::class)]
-#[UsesClass(RegexLiteralHelper::class)]
-#[UsesClass(MissingUnicodeFlagRule::class)]
+#[CoversNothing]
 final class PregCallHelperTest extends TestCase
 {
     /**

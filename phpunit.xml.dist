@@ -16,7 +16,14 @@
     </testsuites>
     <source>
         <include>
-            <directory>Simbiat</directory>
+            <file>MagoExtension.php</file>
+            <file>bin/worker.php</file>
+            <directory>Helpers</directory>
+            <directory>PHP</directory>
+            <directory>Regex</directory>
+            <directory>SQL</directory>
+            <directory>Strings</directory>
+            <directory>Twig</directory>
         </include>
         <exclude>
             <directory>tests</directory>

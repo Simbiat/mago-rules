@@ -8,8 +8,6 @@ use Mago\Sdk\Linter\LintContext;
 use Mago\Sdk\Span;
 use Mago\Sdk\Syntax\NodeKind;
 
-// phpcs:disable Simbiat.Strings.PreferMultibyte -- PCRE offsets and string indexes are in bytes, so byte functions are the correct ones in this file.
-
 /**
  * What the two SQL date/time rules have in common: finding the SQL text in string literals,
  * and finding the places in it that need a change.
@@ -45,7 +43,7 @@ final class SqlDateTimeHelper
     private const string UTC_DETECT_PATTERN = '/\b(UTC_)(TIMESTAMP|TIME|DATE)\b/iur';
 
     /**
-     * Find the pieces of text, that can be SQL, in the node of the context.
+     * Find the piece of text, that can be SQL, in the node of the context.
      *
      * A quoted string (`'...'`, `"..."`), with or without interpolation, is one piece, and so is a heredoc. A nowdoc is not checked.
      * That is what PHPCS did, too: it checked `T_CONSTANT_ENCAPSED_STRING`, `T_DOUBLE_QUOTED_STRING` and `T_HEREDOC`, but not `T_NOWDOC`.
@@ -54,46 +52,37 @@ final class SqlDateTimeHelper
      *
      * @param LintContext $context The rule must have `NodeKind::LiteralString`, `NodeKind::InterpolatedString` and `NodeKind::DocumentString` in its targets.
      *
-     * @return list<array{body: string, code: string, offset: int, span: Span}> `body` is the text inside the quotes, as it is in the file.
-     *                                                                         `code` is the same text, with the interpolated parts replaced by spaces (the length is the same, so the offsets are the same).
-     *                                                                         `offset` is where the text starts in the file, `span` is what to point at when reporting.
+     * @return array{body: string, code: string, offset: int, span: Span}|null `body` is the text inside the quotes, as it is in the file.
+     *                                                                          `code` is the same text, with the interpolated parts replaced by spaces (the length is the same, so the offsets are the same).
+     *                                                                          `offset` is where the text starts in the file, `span` is what to point at when reporting.
+     *                                                                          Null if the node is a nowdoc, or has no text.
      */
-    public static function findBodies(LintContext $context): array
+    public static function findBody(LintContext $context): ?array
     {
         $file = $context->file;
         $node = $context->node;
 
         if ($node->kind === NodeKind::LiteralString) {
             $text = $file->getText($node);
-            // A quoted string always has two quotes, so a shorter one cannot happen. The check is for the case of broken input only.
-            if (\strlen($text) < 2) {
-                return [];
-            }
-
-            // The quotes are single ASCII bytes.
+            // The quotes are single ASCII bytes. A quoted string always has two of them. If it is shorter anyway, `substr()` gives an empty body.
             $body = \substr($text, 1, -1);
 
-            return [['body' => $body, 'code' => $body, 'offset' => $node->span->start + 1, 'span' => $node->span]];
+            return ['body' => $body, 'code' => $body, 'offset' => $node->span->start + 1, 'span' => $node->span];
         }
 
         if ($node->kind === NodeKind::InterpolatedString) {
-            $text = $file->getText($node);
-            if (\strlen($text) < 2) {
-                return [];
-            }
-
-            // The text between the quotes. The parts are inside of it.
+            // The text between the quotes. The parts are inside of it. A quoted string has two quotes, so the range is valid.
             return self::fromParts($context, $node->span->start + 1, $node->span->end - 1);
         }
 
         if ($node->kind !== NodeKind::DocumentString || \preg_match('/^<<<[ \t]*\'/', $file->getText($node)) === 1) {
-            return [];
+            return null;
         }
 
         // The parts of a heredoc are its body: they do not include the opening and the closing label.
         $parts = $context->getChildren();
         if ($parts === []) {
-            return [];
+            return null;
         }
 
         return self::fromParts($context, $parts[0]->span->start, $parts[\array_key_last($parts)]->span->end);
@@ -277,7 +266,7 @@ final class SqlDateTimeHelper
      * @param int         $start   Where the text starts.
      * @param int         $end     Where the text ends.
      *
-     * @return list<array{body: string, code: string, offset: int, span: Span}>
+     * @return array{body: string, code: string, offset: int, span: Span}
      */
     private static function fromParts(LintContext $context, int $start, int $end): array
     {
@@ -295,6 +284,6 @@ final class SqlDateTimeHelper
             $code = \substr_replace($code, \str_repeat(' ', $part->span->length()), $part->span->start - $start, $part->span->length());
         }
 
-        return [['body' => $body, 'code' => $code, 'offset' => $start, 'span' => $span]];
+        return ['body' => $body, 'code' => $code, 'offset' => $start, 'span' => $span];
     }
 }

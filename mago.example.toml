@@ -6,8 +6,7 @@
 #  - a folder of the project:  packages/MagoRules/bin/worker.php
 # The PHP must be the one, that has the dependencies of the project. If you run your tools in a Docker container,
 # this is the place to say so, for example: command = ["docker", "compose", "exec", "-T", "php", "php", "packages/MagoRules/bin/worker.php"]
-# command = ["php", "vendor/simbiat/mago-rules/bin/worker.php", "--sql-precision=0"]
-command = ["php", "/app/packages/MagoRules/bin/worker.php", "--sql-precision=0"]
+command = ["php", "vendor/simbiat/mago-rules/bin/worker.php", "--sql-precision=0"]
 
 # Optional. The defaults are one adaptive pool, and a timeout, that is enough for normal files. See the Mago documentation for the rest.
 # workers = 2

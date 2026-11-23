@@ -4,21 +4,16 @@ declare(strict_types=1);
 
 namespace Simbiat\MagoRules\Tests\Helpers;
 
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Simbiat\MagoRules\Helpers\CallHelper;
-use Simbiat\MagoRules\Strings\MultibyteEncodingRule;
-use Simbiat\MagoRules\Strings\PreferMultibyteRule;
 use Simbiat\MagoRules\Tests\Support\MagoRunner;
 
 /**
  * The helper needs a syntax tree from Mago, so its behavior is checked through the rules that use it:
  * `simbiat/prefer-multibyte` (is a function call found?) and `simbiat/multibyte-encoding` (arguments, named arguments, the trailing comma).
  */
-#[CoversClass(CallHelper::class)]
-#[\PHPUnit\Framework\Attributes\UsesClass(MultibyteEncodingRule::class)]
-#[\PHPUnit\Framework\Attributes\UsesClass(PreferMultibyteRule::class)]
+#[CoversNothing]
 final class CallHelperTest extends TestCase
 {
     /**

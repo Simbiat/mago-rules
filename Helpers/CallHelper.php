@@ -34,10 +34,8 @@ final class CallHelper
      */
     public static function findCall(LintContext $context, array $functions): ?array
     {
-        if ($context->node->kind !== NodeKind::FunctionCall) {
-            return null;
-        }
-
+        // Mago sends only the kinds from `targets`, so this is a call of a function already (`fromNode()` throws for anything else, and never gives null).
+        // A method call and a static call are other kinds of nodes, so the rule must have `NodeKind::FunctionCall` in its targets.
         $call = CallExpression::fromNode($context->file, $context->node);
         $callee = $call->getName($context->file);
         if ($callee === null) {
@@ -95,11 +93,8 @@ final class CallHelper
     {
         // `end()` would take the property by reference, and it is read-only.
         $last = $call->arguments === [] ? null : $call->arguments[\array_key_last($call->arguments)];
-        if ($last === null) {
-            return false;
-        }
-
-        $tail = $file->getText(new Span($last->node->span->end, self::closeParenthesisOffset($call)));
+        // No arguments, no comma. The only caller checks it already, so this is a guard for other callers.
+        $tail = $last === null ? '' : $file->getText(new Span($last->node->span->end, self::closeParenthesisOffset($call)));
         // The comments may have commas inside them. The pattern has the `u` flag, and if the text is not valid UTF-8, the unchanged text is checked.
         $without_comments = \preg_replace('~/\*.*?\*/|//[^\n]*|#[^\n]*~su', '', $tail) ?? $tail;
 
@@ -116,16 +111,9 @@ final class CallHelper
      */
     public static function literalString(SourceFile $file, Node $expression): ?Node
     {
-        if ($expression->kind === NodeKind::LiteralString) {
-            return $expression;
-        }
+        // Mago wraps a literal in a `Literal` node, and the string is its child (a `Literal` always has one). A bare `LiteralString` is accepted too.
+        $inner = $expression->kind === NodeKind::Literal ? $file->getChildren($expression)[0] : $expression;
 
-        if ($expression->kind !== NodeKind::Literal) {
-            return null;
-        }
-
-        $inner = $file->getChildren($expression)[0] ?? null;
-
-        return $inner !== null && $inner->kind === NodeKind::LiteralString ? $inner : null;
+        return $inner->kind === NodeKind::LiteralString ? $inner : null;
     }
 }

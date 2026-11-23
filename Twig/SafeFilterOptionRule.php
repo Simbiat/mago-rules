@@ -45,7 +45,7 @@ final class SafeFilterOptionRule implements Rule
         $class_name = null;
         $arguments = null;
         foreach ($context->getChildren() as $child) {
-            if ($child->kind === NodeKind::Expression && $class_name === null) {
+            if ($child->kind === NodeKind::Expression) {
                 // `new \TwigFunction`: strip the leading backslash.
                 // A longer name (`\Twig\TwigFunction`) will not match the list, so it stays ignored.
                 $class_name = \ltrim($file->getText($child), '\\');

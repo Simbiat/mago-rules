@@ -115,6 +115,10 @@ final class SqlDateTimeHelperTest extends TestCase
             'empty parentheses' => ['SELECT NOW()', 6, [['length' => 5, 'offset' => 7, 'replacement' => 'NOW(6)', 'target' => '6', 'type' => 'precision']]],
             'a wrong digit and spaces are replaced' => ['SELECT NOW( 3 )', 0, [['length' => 8, 'offset' => 7, 'replacement' => 'NOW(0)', 'target' => '0', 'type' => 'precision']]],
             'the case of the keyword is kept' => ['SELECT now()', 0, [['length' => 5, 'offset' => 7, 'replacement' => 'now(0)', 'target' => '0', 'type' => 'precision']]],
+            'every wrong one is edited' => ['SELECT NOW(), CURTIME(3)', 0, [
+                ['length' => 5, 'offset' => 7, 'replacement' => 'NOW(0)', 'target' => '0', 'type' => 'precision'],
+                ['length' => 10, 'offset' => 14, 'replacement' => 'CURTIME(0)', 'target' => '0', 'type' => 'precision'],
+            ]],
             'only the wrong one in a string' => ['SELECT NOW(0), CURTIME()', 0, [['length' => 9, 'offset' => 15, 'replacement' => 'CURTIME(0)', 'target' => '0', 'type' => 'precision']]],
         ];
     }
@@ -166,6 +170,26 @@ final class SqlDateTimeHelperTest extends TestCase
             [
                 ['length' => 13, 'offset' => 7, 'replacement' => 'CURRENT_TIMESTAMP(2)', 'type' => 'merged'],
                 ['length' => 8, 'offset' => 22, 'replacement' => 'CURRENT_DATE', 'type' => 'utc'],
+            ],
+            $merged,
+        );
+    }
+
+    /**
+     * A `UTC_*` function without a precision edit does not stop the merge: the ones after it are still merged.
+     */
+    public function testMergeContinuesAfterAnEditWithoutPrecision(): void
+    {
+        $masked = 'SELECT UTC_DATE, UTC_TIMESTAMP';
+        $merged = SqlDateTimeHelper::mergeUtcWithPrecision(
+            SqlDateTimeHelper::collectUtcEdits($masked),
+            SqlDateTimeHelper::collectPrecisionEdits($masked, 0),
+        );
+
+        self::assertSame(
+            [
+                ['length' => 8, 'offset' => 7, 'replacement' => 'CURRENT_DATE', 'type' => 'utc'],
+                ['length' => 13, 'offset' => 17, 'replacement' => 'CURRENT_TIMESTAMP(0)', 'type' => 'merged'],
             ],
             $merged,
         );

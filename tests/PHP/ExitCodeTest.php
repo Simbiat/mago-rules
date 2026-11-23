@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Simbiat\MagoRules\Tests\PHP;
 
-use PHPUnit\Framework\Attributes\CoversClass;
-use Simbiat\MagoRules\PHP\ExitCodeRule;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use Simbiat\MagoRules\Tests\RuleTestCase;
 use Simbiat\MagoRules\Tests\Support\MagoRunner;
 
-#[CoversClass(ExitCodeRule::class)]
+#[CoversNothing]
 final class ExitCodeTest extends RuleTestCase
 {
     public static function ruleCodes(): array

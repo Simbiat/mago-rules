@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Simbiat\MagoRules\Tests\Twig;
 
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Simbiat\MagoRules\Tests\RuleTestCase;
 use Simbiat\MagoRules\Tests\Support\MagoRunner;
-use Simbiat\MagoRules\Twig\SafeFilterOptionRule;
 
-#[CoversClass(SafeFilterOptionRule::class)]
+#[CoversNothing]
 final class SafeFilterOptionTest extends RuleTestCase
 {
     public static function ruleCodes(): array

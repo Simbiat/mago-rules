@@ -57,10 +57,16 @@ trim($raw);
 strlen($rawBody);
 strlen($user_key);
 strlen($IV_BYTES);
+strlen($ключ_raw);
 strlen($ivBytes);
 strlen($hashes);
 strlen($keys);
 strlen($saltValue);
+
+// === Only an argument that STARTS with a variable counts: a hint deeper inside is not looked at ===
+strlen(trim($hash)); // @expect simbiat/prefer-multibyte
+strlen(f($raw)); // @expect simbiat/prefer-multibyte
+strlen('$key'); // @expect simbiat/prefer-multibyte
 
 // === A hint is a whole word only, not a part of a word: flagged ===
 strlen($archive); // @expect simbiat/prefer-multibyte
@@ -95,3 +101,6 @@ $anonymous = new class
 strlen_custom($str);
 strtolowercase($str);
 $callable = 'strlen';
+
+// === A call without arguments has no variable to inspect: it is flagged ===
+strlen(); // @expect simbiat/prefer-multibyte

@@ -10,6 +10,7 @@ use Mago\Sdk\Linter\RuleDefinition;
 use Mago\Sdk\Reporting\Issue;
 use Mago\Sdk\Reporting\Level;
 use Mago\Sdk\Reporting\TextEdit;
+use Mago\Sdk\Syntax\Node;
 use Mago\Sdk\Syntax\NodeKind;
 
 /**
@@ -53,10 +54,20 @@ final class ExitCodeRule implements Rule
             }
         }
 
-        if ($keyword === null) {
-            return;
+        // Mago always gives an `exit` or `die` node a keyword. Without one, there is nothing to report.
+        if ($keyword !== null) {
+            $this->check($context, $keyword, $arguments);
         }
+    }
 
+    /**
+     * @param LintContext $context
+     * @param Node        $keyword   The `exit` or `die` token.
+     * @param Node|null   $arguments The parentheses with everything inside. Null if there are none.
+     */
+    private function check(LintContext $context, Node $keyword, ?Node $arguments): void
+    {
+        $file = $context->file;
         $keyword_text = $file->getText($keyword);
         // The token is `exit` or `die` in any ASCII case, so `strtolower()` is correct and `mb_strtolower()` is not needed.
         // phpcs:ignore Simbiat.Strings.PreferMultibyte -- A keyword is not text.

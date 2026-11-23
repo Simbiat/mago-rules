@@ -147,14 +147,9 @@ final class MagoRunner
 
         \file_put_contents($directory.'/fixture.php', $code);
         $worker = \str_replace('\\', '/', self::root().'/bin/worker.php');
-        // The prepend file is for environments, that need something before the worker starts. Usually there is none.
-        $command = ['php'];
-        $prepend = \getenv('MAGO_WORKER_PREPEND');
-        if (\is_string($prepend) && $prepend !== '') {
-            \array_push($command, '-d', 'auto_prepend_file='.$prepend);
-        }
-
-        \array_push($command, $worker, '--sql-precision='.$precision);
+        // `MAGO_WORKER_PREPEND` is for environments, that need something before the worker starts. Usually there is none.
+        // When PHPUnit collects code coverage, the worker also gets the settings to collect its own: PHPUnit cannot see its process.
+        $command = ['php', ...WorkerCoverage::phpArguments(), $worker, '--sql-precision='.$precision];
 
         \file_put_contents(
             $directory.'/mago.toml',
@@ -186,12 +181,16 @@ final class MagoRunner
         $stderr = (string)\stream_get_contents($pipes[2]);
         \fclose($pipes[1]);
         \fclose($pipes[2]);
+        $code = \proc_close($process);
 
-        return ['stdout' => $stdout, 'stderr' => $stderr, 'code' => \proc_close($process)];
+        // The workers have ended with Mago: their coverage data is ready.
+        WorkerCoverage::collect();
+
+        return ['stdout' => $stdout, 'stderr' => $stderr, 'code' => $code];
     }
 
     /**
-     * @return list<array{code: string, line: int, fixable: bool, message: string, level: string}>
+     * @return list<array{code: string, line: int, start: int, end: int, fixable: bool, message: string, level: string}>
      */
     private static function parseIssues(string $json, string $stderr): array
     {
@@ -205,10 +204,15 @@ final class MagoRunner
         $issues = [];
         foreach ($report['issues'] ?? [] as $issue) {
             $line = null;
+            $start = 0;
+            $end = 0;
             foreach ($issue['annotations'] ?? [] as $annotation) {
                 if (($annotation['kind'] ?? '') === 'Primary') {
                     // Mago counts lines from 0.
-                    $line = $annotation['span']['start']['line'] + 1;
+                    $line = $annotation['span']['start']['line'];
+                    // The byte offsets of the range, which the result points at.
+                    $start = $annotation['span']['start']['offset'];
+                    $end = $annotation['span']['end']['offset'];
                     break;
                 }
             }
@@ -216,6 +220,8 @@ final class MagoRunner
             $issues[] = [
                 'code' => $issue['code'],
                 'line' => $line ?? 0,
+                'start' => $start,
+                'end' => $end,
                 'fixable' => ($issue['edits'] ?? []) !== [],
                 'message' => $issue['message'],
                 'level' => $issue['level'],
